@@ -1,4 +1,4 @@
-Renderers
+Renderers [![Build Status](https://travis-ci.org/pedrovgs/Renderers.svg?branch=master)](https://travis-ci.org/pedrovgs/Renderers)  [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.pedrovgs/renderers/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.pedrovgs/renderers) [![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-Renderers-brightgreen.svg?style=flat)](https://android-arsenal.com/details/1/1195)
 =========
 
 
@@ -119,47 +119,67 @@ You can use [Jake Wharton's][2] [Butterknife][3] library to avoid findViewById c
 ```java
 public class VideoRendererBuilder extends RendererBuilder<Video> {
 
+  @Inject
+  public VideoRendererBuilder(Context context, VideoRenderer.OnVideoClicked onVideoClicked) {
+    Collection<Renderer<Video>> prototypes = getPrototypes(context, onVideoClicked);
+    setPrototypes(prototypes);
+  }
 
-    public VideoRendererBuilder(List<Renderer<Video>> prototypes) {
-        super(prototypes);
+  /**
+   * Method to declare Video-VideoRenderer mapping.
+   * Favorite videos will be rendered using FavoriteVideoRenderer.
+   * Live videos will be rendered using LiveVideoRenderer.
+   * Liked videos will be rendered using LikeVideoRenderer.
+   *
+   * @param content used to map object-renderers.
+   * @return VideoRenderer subtype class.
+   */
+  @Override
+  protected Class getPrototypeClass(Video content) {
+    Class prototypeClass;
+    if (content.isFavorite()) {
+      prototypeClass = FavoriteVideoRenderer.class;
+    } else if (content.isLive()) {
+      prototypeClass = LiveVideoRenderer.class;
+    } else {
+      prototypeClass = LikeVideoRenderer.class;
     }
+    return prototypeClass;
+  }
 
-    /**
-     * Method to declare Video-VideoRenderer mapping.
-     * Favorite videos will be rendered using FavoriteVideoRenderer.
-     * Live videos will be rendered using LiveVideoRenderer.
-     * Liked videos will be rendered using LikeVideoRenderer.
-     *
-     * @param content used to map object-renderers.
-     * @return VideoRenderer subtype class.
-     */
-    @Override
-    protected Class getPrototypeClass(Video content) {
-        Class prototypeClass;
-        if (content.isFavorite()) {
-            prototypeClass = FavoriteVideoRenderer.class;
-        } else if (content.isLive()) {
-            prototypeClass = LiveVideoRenderer.class;
-        } else {
-            prototypeClass = LikeVideoRenderer.class;
-        }
-        return prototypeClass;
-    }
+  /**
+   * Create a list of prototypes to configure RendererBuilder.
+   * The list of Renderer<Video> that contains all the possible renderers that our RendererBuilder
+   * is going to use.
+   *
+   * @return Renderer<Video> prototypes for RendererBuilder.
+   */
+  private List<Renderer<Video>> getPrototypes(Context context,
+      VideoRenderer.OnVideoClicked onVideoClickedListener) {
+    List<Renderer<Video>> prototypes = new LinkedList<Renderer<Video>>();
+    LikeVideoRenderer likeVideoRenderer = new LikeVideoRenderer(context);
+    likeVideoRenderer.setListener(onVideoClickedListener);
+    prototypes.add(likeVideoRenderer);
 
+    FavoriteVideoRenderer favoriteVideoRenderer = new FavoriteVideoRenderer(context);
+    favoriteVideoRenderer.setListener(onVideoClickedListener);
+    prototypes.add(favoriteVideoRenderer);
+
+    LiveVideoRenderer liveVideoRenderer = new LiveVideoRenderer(context);
+    liveVideoRenderer.setListener(onVideoClickedListener);
+    prototypes.add(liveVideoRenderer);
+
+    return prototypes;
+  }
 }
 ```
 
-* 3. Initialize your ListView with your RendererBuilder<T> and your AdapteeCollection inside Activities and Fragments.
+* 3. Initialize your ListView with your RendererBuilder<T> and your AdapteeCollection inside Activities and Fragments. **You can use ListAdapteeCollection or create your own implementation creating a class which implements AdapteeCollection to configure your RendererAdapter.**
 
 ```java
-
-    /**
-     * Initialize ListVideo with our RendererAdapter.
-     */
-
-    private void initListView() {
-        listView.setAdapter(adapter);
-    }
+private void initListView() {
+    listView.setAdapter(adapter);
+}
 ```
 
 The sample code is using [Dagger][6] and [ButterKnife][4] library to avoid initialize some entities and findViewById() methods, but you can use this library without third party libraries and provide that dependencies yourself.
@@ -167,7 +187,7 @@ The sample code is using [Dagger][6] and [ButterKnife][4] library to avoid initi
 Usage
 -----
 
-Download the project, compile it using ```mvn clean install``` import ``renderers-1.0.9.jar`` into your project.
+Download the project, compile it using ```mvn clean install``` import ``renderers-1.5.jar`` into your project.
 
 Or declare it into your pom.xml
 
@@ -175,7 +195,7 @@ Or declare it into your pom.xml
 <dependency>
     <groupId>com.github.pedrovgs</groupId>
     <artifactId>renderers</artifactId>
-    <version>1.0.9</version>
+    <version>1.5</version>
 </dependency>
 ```
 
@@ -183,7 +203,7 @@ Or declare it into your pom.xml
 Or into your build.gradle
 ```groovy
 dependencies{
-    compile 'com.github.pedrovgs:renderers:1.0.9'
+    compile 'com.github.pedrovgs:renderers:1.5'
 }
 ```
 
@@ -204,9 +224,18 @@ Who's using it
 --------------
 
 * [El Rubius Vídeos][7]
+* [Tuenti][8]
+* [Finge Gesture Launcher][9]
+* [Cabify] [10]
+* [InfoJobs] [11]
 
 *Does your app use Renderers? If you want to be featured on this list drop me a line.*
 
+Contributors
+------------
+
+* [Pedro Vicente Gómez Sánchez][12]
+* [Rayco Araña][13]
 
 License
 -------
@@ -229,7 +258,13 @@ License
 [1]: http://raw.github.com/pedrovgs/Renderers/master/art/Screenshot_demo_1.png
 [2]: https://github.com/JakeWharton
 [3]: https://github.com/JakeWharton/butterknife
-[4]: https://vimeo.com/87450999
-[5]: http://www.slideshare.net/PedroVicenteGmezSnch/newsfeed?nf_redirect=true
+[4]: http://media.fib.upc.edu/fibtv/streamingmedia/view/2/930
+[5]: http://www.slideshare.net/PedroVicenteGmezSnch/software-design-patterns-on-android
 [6]: https://github.com/square/dagger
 [7]: https://play.google.com/store/apps/details?id=com.nero.elrubiusomg
+[8]: https://play.google.com/store/apps/details?hl=es&id=com.tuenti.messenger
+[9]: https://play.google.com/store/apps/details?id=com.carlosdelachica.finger
+[10]: https://play.google.com/store/apps/details?id=com.cabify.rider
+[11]: https://play.google.com/store/apps/details?id=net.infojobs.mobile.android
+[12]: https://github.com/pedrovgs
+[13]: https://github.com/raycoarana

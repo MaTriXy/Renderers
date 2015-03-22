@@ -15,50 +15,77 @@
  */
 package com.pedrogomez.renderers.ui.builder;
 
+import android.content.Context;
 import com.pedrogomez.renderers.Renderer;
 import com.pedrogomez.renderers.RendererBuilder;
 import com.pedrogomez.renderers.model.Video;
 import com.pedrogomez.renderers.ui.renderers.FavoriteVideoRenderer;
 import com.pedrogomez.renderers.ui.renderers.LikeVideoRenderer;
 import com.pedrogomez.renderers.ui.renderers.LiveVideoRenderer;
-
-import javax.inject.Inject;
+import com.pedrogomez.renderers.ui.renderers.VideoRenderer;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
+import javax.inject.Inject;
 
 /**
- * RendererBuilder extension created to work with videos. This class works as connector between RendererAdapter and
+ * RendererBuilder extension created to work with videos. This class works as connector between
+ * RendererAdapter and
  * VideoRenderers. Define the mapping between Videos and VideoRenderers.
  *
  * @author Pedro Vicente Gómez Sánchez.
  */
 public class VideoRendererBuilder extends RendererBuilder<Video> {
 
+  @Inject public VideoRendererBuilder(Context context,
+      VideoRenderer.OnVideoClicked onVideoClicked) {
+    Collection<Renderer<Video>> prototypes = getPrototypes(context, onVideoClicked);
+    setPrototypes(prototypes);
+  }
 
-    @Inject
-    public VideoRendererBuilder(List<Renderer<Video>> prototypes) {
-        super(prototypes);
+  /**
+   * Method to declare Video-VideoRenderer mapping.
+   * Favorite videos will be rendered using FavoriteVideoRenderer.
+   * Live videos will be rendered using LiveVideoRenderer.
+   * Liked videos will be rendered using LikeVideoRenderer.
+   *
+   * @param content used to map object-renderers.
+   * @return VideoRenderer subtype class.
+   */
+  @Override protected Class getPrototypeClass(Video content) {
+    Class prototypeClass;
+    if (content.isFavorite()) {
+      prototypeClass = FavoriteVideoRenderer.class;
+    } else if (content.isLive()) {
+      prototypeClass = LiveVideoRenderer.class;
+    } else {
+      prototypeClass = LikeVideoRenderer.class;
     }
+    return prototypeClass;
+  }
 
-    /**
-     * Method to declare Video-VideoRenderer mapping.
-     * Favorite videos will be rendered using FavoriteVideoRenderer.
-     * Live videos will be rendered using LiveVideoRenderer.
-     * Liked videos will be rendered using LikeVideoRenderer.
-     *
-     * @param content used to map object-renderers.
-     * @return VideoRenderer subtype class.
-     */
-    @Override
-    protected Class getPrototypeClass(Video content) {
-        Class prototypeClass;
-        if (content.isFavorite()) {
-            prototypeClass = FavoriteVideoRenderer.class;
-        } else if (content.isLive()) {
-            prototypeClass = LiveVideoRenderer.class;
-        } else {
-            prototypeClass = LikeVideoRenderer.class;
-        }
-        return prototypeClass;
-    }
+  /**
+   * Create a list of prototypes to configure RendererBuilder.
+   * The list of Renderer<Video> that contains all the possible renderers that our RendererBuilder
+   * is going to use.
+   *
+   * @return Renderer<Video> prototypes for RendererBuilder.
+   */
+  private List<Renderer<Video>> getPrototypes(Context context,
+      VideoRenderer.OnVideoClicked onVideoClickedListener) {
+    List<Renderer<Video>> prototypes = new LinkedList<Renderer<Video>>();
+    LikeVideoRenderer likeVideoRenderer = new LikeVideoRenderer(context);
+    likeVideoRenderer.setListener(onVideoClickedListener);
+    prototypes.add(likeVideoRenderer);
 
+    FavoriteVideoRenderer favoriteVideoRenderer = new FavoriteVideoRenderer(context);
+    favoriteVideoRenderer.setListener(onVideoClickedListener);
+    prototypes.add(favoriteVideoRenderer);
+
+    LiveVideoRenderer liveVideoRenderer = new LiveVideoRenderer(context);
+    liveVideoRenderer.setListener(onVideoClickedListener);
+    prototypes.add(liveVideoRenderer);
+
+    return prototypes;
+  }
 }

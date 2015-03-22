@@ -13,24 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.pedrogomez.renderers.model;
+package com.pedrogomez.renderers;
 
-import com.pedrogomez.renderers.ListAdapteeCollection;
-
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Class created to represent a list of videos. This class has been created to store videos,
- * encapsulate the collection usage and implements the AdapteeCollection interface needed by
- * RendererAdapter. You don't have to create your own AdapteeCollection if you don't need it, you
- * can use ListAdapteeColleciton.
+ * Generic AdapteeCollection implementation based on ArrayList<T>. Library clients can use this
+ * class instead of create his own AdapteeCollections.
  *
  * @author Pedro Vicente Gómez Sánchez.
  */
-public class VideoCollection extends ListAdapteeCollection<Video> {
+public class ListAdapteeCollection<T> extends ArrayList<T> implements AdapteeCollection<T> {
 
-  public VideoCollection(List<Video> videos) {
-    super(videos);
+  public ListAdapteeCollection() {
+  }
+
+  public ListAdapteeCollection(List<T> list) {
+    super(list);
   }
 
 }

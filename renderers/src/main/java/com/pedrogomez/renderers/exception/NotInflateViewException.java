@@ -16,14 +16,14 @@
 package com.pedrogomez.renderers.exception;
 
 /**
- * Exception created to be thrown when any renderer is not inflating a view. All renderers have to inflate a view
- * and return it in inflateView method.
+ * Exception created to be thrown when any renderer is not inflating a view. All renderers have to
+ * inflate a view and return it in inflateView method.
  *
  * @author Pedro Vicente Gómez Sánchez.
  */
 public class NotInflateViewException extends RendererException {
 
-    public NotInflateViewException(String detailMessage) {
-        super(detailMessage);
-    }
+  public NotInflateViewException(String detailMessage) {
+    super(detailMessage);
+  }
 }
