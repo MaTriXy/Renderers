@@ -25,11 +25,11 @@ import java.util.Collection;
 /**
  * BaseAdapter created to work RendererBuilders and Renderer instances. Other adapters have to use
  * this one to show information into ListView widgets.
- * <p/>
+ *
  * This class is the heart of this library. It's used to avoid the library users declare a new
  * renderer each time they have to show information into a ListView.
- * <p/>
- * RendererAdapter<T> has to be constructed with a LayoutInflater to inflate views, one
+ *
+ * RendererAdapter has to be constructed with a LayoutInflater to inflate views, one
  * RendererBuilder to provide Renderer to RendererAdapter and one AdapteeCollection to
  * provide the elements to render.
  *
@@ -37,13 +37,14 @@ import java.util.Collection;
  */
 public class RendererAdapter<T> extends BaseAdapter {
 
-  private final LayoutInflater layoutInflater;
   private final RendererBuilder<T> rendererBuilder;
-  private final AdapteeCollection<T> collection;
+  private AdapteeCollection<T> collection;
 
-  public RendererAdapter(LayoutInflater layoutInflater, RendererBuilder rendererBuilder,
-      AdapteeCollection<T> collection) {
-    this.layoutInflater = layoutInflater;
+  public RendererAdapter(RendererBuilder<T> rendererBuilder) {
+    this(rendererBuilder, new ListAdapteeCollection<T>());
+  }
+
+  public RendererAdapter(RendererBuilder<T> rendererBuilder, AdapteeCollection<T> collection) {
     this.rendererBuilder = rendererBuilder;
     this.collection = collection;
   }
@@ -60,12 +61,20 @@ public class RendererAdapter<T> extends BaseAdapter {
     return position;
   }
 
+  public void setCollection(AdapteeCollection<T> collection) {
+    if (collection == null) {
+      throw new IllegalArgumentException("The AdapteeCollection configured can't be null");
+    }
+
+    this.collection = collection;
+  }
+
   /**
    * Main method of RendererAdapter. This method has the responsibility of update the
    * RendererBuilder values and create or recycle a new Renderer. Once the renderer has been
    * obtained the RendereBuilder will call the render method in the renderer and will return the
    * Renderer root view to the ListView.
-   * <p/>
+   *
    * If rRendererBuilder returns a null Renderer this method will throw a
    * NullRendererBuiltException.
    *
@@ -79,7 +88,7 @@ public class RendererAdapter<T> extends BaseAdapter {
     rendererBuilder.withContent(content);
     rendererBuilder.withConvertView(convertView);
     rendererBuilder.withParent(parent);
-    rendererBuilder.withLayoutInflater(layoutInflater);
+    rendererBuilder.withLayoutInflater(LayoutInflater.from(parent.getContext()));
     Renderer<T> renderer = rendererBuilder.build();
     if (renderer == null) {
       throw new NullRendererBuiltException("RendererBuilder have to return a not null Renderer");
@@ -111,7 +120,7 @@ public class RendererAdapter<T> extends BaseAdapter {
   }
 
   /**
-   * Add an element to the AdapteeCollection<T>.
+   * Add an element to the AdapteeCollection.
    *
    * @param element to add.
    */
@@ -120,29 +129,29 @@ public class RendererAdapter<T> extends BaseAdapter {
   }
 
   /**
-   * Remove an element from the AdapteeCollection<T>.
+   * Remove an element from the AdapteeCollection.
    *
    * @param element to remove.
    */
-  public void remove(T element) {
+  public void remove(Object element) {
     collection.remove(element);
   }
 
   /**
-   * Add a Collection<T> of elements to the AdapteeCollection.
+   * Add a Collection of elements to the AdapteeCollection.
    *
    * @param elements to add.
    */
-  public void addAll(Collection<T> elements) {
+  public void addAll(Collection<? extends T> elements) {
     collection.addAll(elements);
   }
 
   /**
-   * Remove a Collection<T> of elements to the AdapteeCollection.
+   * Remove a Collection of elements to the AdapteeCollection.
    *
    * @param elements to remove.
    */
-  public void removeAll(Collection<T> elements) {
+  public void removeAll(Collection<?> elements) {
     collection.removeAll(elements);
   }
 
@@ -154,7 +163,7 @@ public class RendererAdapter<T> extends BaseAdapter {
   }
 
   /**
-   * Allows the client code to access the AdapteeCollection<T> from subtypes of RendererAdapter.
+   * Allows the client code to access the AdapteeCollection from subtypes of RendererAdapter.
    *
    * @return collection used in the adapter as the adaptee class.
    */
@@ -165,7 +174,7 @@ public class RendererAdapter<T> extends BaseAdapter {
   /**
    * Empty implementation created to allow the client code to extend this class without override
    * getView method.
-   * <p/>
+   *
    * This method is called before render the Renderer and can be used in RendererAdapter extension
    * to add extra info to the renderer created like the position in the ListView/RecyclerView.
    *

@@ -8,6 +8,8 @@ import com.pedrogomez.renderers.exception.NullContentException;
 import com.pedrogomez.renderers.exception.NullLayoutInflaterException;
 import com.pedrogomez.renderers.exception.NullParentException;
 import com.pedrogomez.renderers.exception.NullPrototypeClassException;
+
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import org.junit.Before;
@@ -49,14 +51,6 @@ public class RendererBuilderTest {
     rendererBuilder = new ObjectRendererBuilder(null);
   }
 
-  @Test(expected = NeedsPrototypesException.class)
-  public void shouldThrowNeedsPrototypeExceptionIfPrototypesIsEmpty() {
-    prototypes = new LinkedList<Renderer<Object>>();
-    initializeRendererBuilder();
-
-    rendererBuilder = new ObjectRendererBuilder(prototypes);
-  }
-
   @Test(expected = NullContentException.class)
   public void shouldThrowNullContentExceptionIfBuildRendererWithoutContent() {
     buildRenderer(null, mockedConvertView, mockedParent, mockedLayoutInflater);
@@ -68,7 +62,8 @@ public class RendererBuilderTest {
   }
 
   @Test(expected = NullPrototypeClassException.class)
-  public void shouldThrowNullPrototypeClassExceptionIfRendererBuilderImplementationReturnsNullPrototypeClassAndGetItemViewType() {
+  public void
+  shouldThrowNullPrototypeClassExceptionIfRendererBuilderImplementationReturnsNullPrototypeClassAndGetItemViewType() {
     when(rendererBuilder.getPrototypeClass(mockedContent)).thenReturn(null);
 
     buildRenderer(mockedContent, mockedConvertView, mockedParent, mockedLayoutInflater);
@@ -77,7 +72,8 @@ public class RendererBuilderTest {
   }
 
   @Test(expected = NullPrototypeClassException.class)
-  public void shouldThrowNullPrototypeClassExceptionIfRendererBuilderImplementationReturnsNullPrototypeClassAndBuildOneRenderer() {
+  public void
+  shouldThrowNullPrototypeClassExceptionIfRendererBuilderImplementationReturnsNullPrototypeClassAndBuildOneRenderer() {
     when(rendererBuilder.getPrototypeClass(mockedContent)).thenReturn(null);
 
     buildRenderer(mockedContent, mockedConvertView, mockedParent, mockedLayoutInflater);
@@ -122,6 +118,85 @@ public class RendererBuilderTest {
 
   @Test public void shouldReturnPrototypeSizeOnGetViewTypeCount() {
     assertEquals(prototypes.size(), rendererBuilder.getViewTypeCount());
+  }
+
+  @Test(expected = NeedsPrototypesException.class) public void shouldNotAcceptNullPrototypes() {
+    RendererBuilder<Object> rendererBuilder = new RendererBuilder<Object>();
+
+    rendererBuilder.withPrototypes(null);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void shouldNotAcceptNullKeysBindingAPrototype() {
+    RendererBuilder<Object> rendererBuilder = new RendererBuilder<Object>();
+
+    rendererBuilder.bind(null, new ObjectRenderer());
+  }
+
+  @Test public void shouldAddPrototypeAndConfigureRendererBinding() {
+    RendererBuilder<Object> rendererBuilder = new RendererBuilder<Object>();
+
+    rendererBuilder.bind(Object.class, new ObjectRenderer());
+
+    assertEquals(ObjectRenderer.class, rendererBuilder.getPrototypeClass(new Object()));
+  }
+
+  @Test public void shouldAddDescendantPrototypeAndConfigureRendererBinding() {
+    RendererBuilder<Object> rendererBuilder = new RendererBuilder<Object>();
+
+    rendererBuilder.bind(String.class, new StringRenderer());
+    rendererBuilder.bind(Integer.class, new IntegerRenderer());
+
+
+    assertEquals(StringRenderer.class, rendererBuilder.getPrototypeClass(""));
+    assertEquals(IntegerRenderer.class, rendererBuilder.getPrototypeClass(0));
+  }
+
+  @Test public void shouldAddPrototypeAndConfigureBindingByClass() {
+    RendererBuilder<Object> rendererBuilder = new RendererBuilder<Object>();
+
+    rendererBuilder.withPrototype(new ObjectRenderer()).bind(Object.class, ObjectRenderer.class);
+
+    assertEquals(ObjectRenderer.class, rendererBuilder.getPrototypeClass(new Object()));
+  }
+
+  @Test public void shouldAddDescendantPrototypesAndConfigureBindingByClass() {
+    RendererBuilder<Object> rendererBuilder = new RendererBuilder<Object>();
+
+    rendererBuilder
+            .withPrototype(new StringRenderer()).bind(String.class, StringRenderer.class)
+            .withPrototype(new IntegerRenderer()).bind(Integer.class, IntegerRenderer.class);
+
+    assertEquals(StringRenderer.class, rendererBuilder.getPrototypeClass(""));
+    assertEquals(IntegerRenderer.class, rendererBuilder.getPrototypeClass(0));
+  }
+
+  @Test public void shouldAddDescendantPrototypesBySetterAndConfigureBindingByClass() {
+    RendererBuilder<Object> rendererBuilder = new RendererBuilder<Object>();
+
+    rendererBuilder.setPrototypes(Arrays.asList(new StringRenderer(), new IntegerRenderer()));
+    rendererBuilder.bind(String.class, StringRenderer.class);
+    rendererBuilder.bind(Integer.class, IntegerRenderer.class);
+
+    assertEquals(StringRenderer.class, rendererBuilder.getPrototypeClass(""));
+    assertEquals(IntegerRenderer.class, rendererBuilder.getPrototypeClass(0));
+  }
+
+  @Test public void shouldAddDescendantPrototypesByConstructionAndConfigureBindingByClass() {
+    RendererBuilder<Object> rendererBuilder =
+            new RendererBuilder<Object>(Arrays.asList(new StringRenderer(), new IntegerRenderer()));
+
+    rendererBuilder.bind(String.class, StringRenderer.class);
+    rendererBuilder.bind(Integer.class, IntegerRenderer.class);
+
+    assertEquals(StringRenderer.class, rendererBuilder.getPrototypeClass(""));
+    assertEquals(IntegerRenderer.class, rendererBuilder.getPrototypeClass(0));
+  }
+
+  @Test public void shouldAddPrototyeAndconfigureBindingOnConstruction() {
+    RendererBuilder<Object> rendererBuilder = new RendererBuilder<Object>(new ObjectRenderer());
+
+    assertEquals(ObjectRenderer.class, rendererBuilder.getPrototypeClass(new Object()));
   }
 
   private void initializeMocks() {

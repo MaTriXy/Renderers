@@ -1,23 +1,11 @@
-Renderers [![Build Status](https://travis-ci.org/pedrovgs/Renderers.svg?branch=master)](https://travis-ci.org/pedrovgs/Renderers)  [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.pedrovgs/renderers/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.pedrovgs/renderers) [![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-Renderers-brightgreen.svg?style=flat)](https://android-arsenal.com/details/1/1195)
+Renderers [![Build Status](https://travis-ci.org/pedrovgs/Renderers.svg?branch=master)](https://travis-ci.org/pedrovgs/Renderers) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.pedrovgs/renderers/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.pedrovgs/renderers)
 =========
 
+**Renderers is an Android library created to avoid all the RecyclerView/Adapter boilerplate** needed to create a list/grid   of data in your app and all the spaghetti code that developers used to create following the ``ViewHolder`` classic implementation. **As performance is also important for us, we've added a new ``diffUpdate`` method supporting differential updated transparently.**
 
-Are you bored of creating adapters again and again each time you have to implement a ListView or a RecyclerView?
+With this library you can improve your RecyclerView/Adapter/ViewHolder code. The one sometimes we copy and paste again and again :smiley:. Using this library you won't need to create any new class extending from ``RecyclerViewAdapter``.
 
-Are you bored of using ViewHolders and create getView/onCreateViewHolder/onBindViewHolder methods with thousand of lines full of if/else if/else sentences?
-
-Renderers is an Android library created to avoid all the Adapter/ListView/RecyclerView boilerplate needed to create a new adapter and all the spaghetti code that developers used to create following the ViewHolder classic implementation.
-
-This Android library offers you two main classes to extend and create your own rendering algorithms out of your adapter implementation.
-
-Renderers is an easy way to work with android ListView/RecyclerView and Adapter classes. With this library you only have to create your Renderer classes and declare the mapping between the object to render and the Renderer.
-
-You can find implementation details in this talks:
-
-[Software Design Patterns on Android Video][4]
-
-[Software Design Patterns on Android Slides][5]
-
+Create your ``Renderer`` classes and declare the mapping between the object to render and the ``Renderer``. The ``Renderer`` will use the model information to draw your user interface. You can reuse them in all your RecyclerView and ListView implementations easily. That's it!
 
 Screenshots
 -----------
@@ -27,45 +15,27 @@ Screenshots
 Usage
 -----
 
-To use Renderers Android library and get your ListView/RecyclerView working you only have to follow three steps:
+To use Renderers Android library you only have to follow three steps:
 
-* 1. Create your Renderer or Renderers extending ``Renderer<T>``. Inside your Renderer classes you will have to implement some methods to inflate the layout you want to render and implement the rendering algorithm.
+* 1. Create your ``Renderer`` class or classes extending ``Renderer<T>``. Inside your ``Renderer`` classes. You will have to implement some methods to inflate the layout you want to render and implement the rendering algorithm.
 
 ```java
-public abstract class VideoRenderer extends Renderer<Video> {
+public class VideoRenderer extends Renderer<Video> {
 
-       private final Context context;
-
-       private OnVideoClicked listener;
-
-
-       public VideoRenderer(Context context) {
-           this.context = context;
-       }
-
-       @InjectView(R.id.iv_thumbnail)
+       @BindView(R.id.iv_thumbnail)
        ImageView thumbnail;
-       @InjectView(R.id.tv_title)
+       @BindView(R.id.tv_title)
        TextView title;
-       @InjectView(R.id.iv_marker)
+       @BindView(R.id.iv_marker)
        ImageView marker;
-       @InjectView(R.id.tv_label)
+       @BindView(R.id.tv_label)
        TextView label;
 
        @Override
        protected View inflate(LayoutInflater inflater, ViewGroup parent) {
            View inflatedView = inflater.inflate(R.layout.video_renderer, parent, false);
-           ButterKnife.inject(this, inflatedView);
+           ButterKnife.bind(this, inflatedView);
            return inflatedView;
-       }
-
-
-       @OnClick(R.id.iv_thumbnail)
-       void onVideoClicked() {
-           if (listener != null) {
-               Video video = getContent();
-               listener.onVideoClicked(video);
-           }
        }
 
        @Override
@@ -77,6 +47,12 @@ public abstract class VideoRenderer extends Renderer<Video> {
            renderLabel();
        }
 
+       @OnClick(R.id.iv_thumbnail)
+       void onVideoClicked() {
+           Video video = getContent();
+           Log.d("Renderer", "Clicked: " + video.getTitle());
+       }
+
        private void renderThumbnail(Video video) {
            Picasso.with(context).load(video.getResourceThumbnail()).placeholder(R.drawable.placeholder).into(thumbnail);
        }
@@ -84,44 +60,79 @@ public abstract class VideoRenderer extends Renderer<Video> {
        private void renderTitle(Video video) {
            this.title.setText(video.getTitle());
        }
-
-       public void setListener(OnVideoClicked listener) {
-           this.listener = listener;
-       }
-
-       protected TextView getLabel() {
-           return label;
-       }
-
-       protected ImageView getMarker() {
-           return marker;
-       }
-
-       protected Context getContext() {
-           return context;
-       }
-
-       protected abstract void renderLabel();
-
-       protected abstract void renderMarker(Video video);
-
-
-
 }
 ```
 
+You can use [Jake Wharton's][2] [Butterknife][3] library to avoid findViewById calls inside your Renderers if you want. But the usage of third party libraries is not mandatory.
 
-You can use [Jake Wharton's][2] [Butterknife][3] library to avoid findViewById calls inside your Renderers if you want and [Jake Wharton's][2] [Dagger] [6] library to inject all your dependencies and keep your activities clean of the library initialization code. But use third party libraries is not mandatory.
+* 2. **If you have just one type of item in your list**, instantiate a ``RendererBuilder`` with a ``Renderer`` instance and you are ready to go:
 
+```java
+Renderer<Video> renderer = new LikeVideoRenderer();
+RendererBuilder<Video> rendererBuilder = new RendererBuilder<Video>(renderer);
+```
 
-* 2. Create a RendererBuilder with a Renderer prototypes collection and declare the mapping between the content to render and the Renderer used.
+**If you need to render different objects** into your list/grid you can use ``RendererBuilder.bind`` fluent API and that's it:
+
+```java
+RendererBuilder<Video> rendererBuilder = new RendererBuilder<Video>()
+         .bind(VideoHeader.class, new VideoHeaderRenderer())
+         .bind(Video.class, new LikeVideoRenderer());
+```
+
+* 3. Initialize your ``ListView`` or ``RecyclerView`` with your ``RendererBuilder`` and your ``AdapteeCollection`` instances inside your Activity or Fragment. **You can use ``ListAdapteeCollection`` or create your own implementation creating a class which implements ``AdapteeCollection`` to configure your ``RendererAdapter`` or ``RVRendererAdapter``.**
+
+```java
+private void initListView() {
+    adapter = new RendererAdapter<Video>(rendererBuilder, adapteeCollection);
+    listView.setAdapter(adapter);
+}
+```
+
+or
+
+```java
+private void initListView() {
+    adapter = new RVRendererAdapter<Video>(rendererBuilder, adapteeCollection);
+    recyclerView.setAdapter(adapter);
+}
+```
+
+**Remember, if you are going to use ``RecyclerView`` instead of ``ListView`` you'll have to use ``RVRendererAdapter`` instead of ``RendererAdapter``.**
+
+* 4. **Diff updates:**
+
+***If the ``RecyclerView`` performance is crucial in your application* remember you can use ``diffUpdate`` method in your ``RVRendererAdapter`` instance to update just the items changed in your adapter and not the whole list/grid.***
+
+```java
+adapter.diffUpdate(newList)
+```
+
+This method provides a ready to use diff update for our adapter based on the implementation of the standard ``equals`` and ``hashCode`` methods from the ``Object`` Java class. The classes associated to your renderers will have to implement ``equals`` and ``hashCode`` methods properly. Your ``hashCode`` implementation can be based on the item ID if you have one. You can use your ``hashCode`` implementation as an identifier of the object you want to represent graphically. We know this implementation is not perfect, but is the best we can do wihtout adding a new interface you have to implement to the library breaking all your existing code. Here you can review the [DiffUtil.Callback implementation](https://github.com/pedrovgs/Renderers/blob/master/renderers/src/main/java/com/pedrogomez/renderers/DiffCallback.java) used in this library. If you can't follow this implementation you can always use [a different approach](https://medium.com/@iammert/using-diffutil-in-android-recyclerview-bdca8e4fbb00) combined with your already implemented renderers.
+
+***This library can also be used to show views inside a ``ViewPager``. Take a look at ``VPRendererAdapter`` :smiley:***
+
+Usage
+-----
+
+Add this dependency to your ``build.gradle``:
+
+```groovy
+dependencies{
+    compile 'com.github.pedrovgs:renderers:3.4.0'
+}
+```
+
+Complex binding
+---------------
+
+If your renderers binding is complex and it's not based on different classes but in properties of these classes, you can also extend ``RendererBuilder`` and override ``getPrototypeClass`` to customize your binding as follows:
 
 ```java
 public class VideoRendererBuilder extends RendererBuilder<Video> {
 
-  @Inject
-  public VideoRendererBuilder(Context context, VideoRenderer.OnVideoClicked onVideoClicked) {
-    Collection<Renderer<Video>> prototypes = getPrototypes(context, onVideoClicked);
+  public VideoRendererBuilder() {
+    List<Renderer<Video>> prototypes = getVideoRendererPrototypes();
     setPrototypes(prototypes);
   }
 
@@ -154,19 +165,15 @@ public class VideoRendererBuilder extends RendererBuilder<Video> {
    *
    * @return Renderer<Video> prototypes for RendererBuilder.
    */
-  private List<Renderer<Video>> getPrototypes(Context context,
-      VideoRenderer.OnVideoClicked onVideoClickedListener) {
+  private List<Renderer<Video>> getVideoRendererPrototypes() {
     List<Renderer<Video>> prototypes = new LinkedList<Renderer<Video>>();
-    LikeVideoRenderer likeVideoRenderer = new LikeVideoRenderer(context);
-    likeVideoRenderer.setListener(onVideoClickedListener);
+    LikeVideoRenderer likeVideoRenderer = new LikeVideoRenderer();
     prototypes.add(likeVideoRenderer);
 
-    FavoriteVideoRenderer favoriteVideoRenderer = new FavoriteVideoRenderer(context);
-    favoriteVideoRenderer.setListener(onVideoClickedListener);
+    FavoriteVideoRenderer favoriteVideoRenderer = new FavoriteVideoRenderer();
     prototypes.add(favoriteVideoRenderer);
 
-    LiveVideoRenderer liveVideoRenderer = new LiveVideoRenderer(context);
-    liveVideoRenderer.setListener(onVideoClickedListener);
+    LiveVideoRenderer liveVideoRenderer = new LiveVideoRenderer();
     prototypes.add(liveVideoRenderer);
 
     return prototypes;
@@ -174,52 +181,15 @@ public class VideoRendererBuilder extends RendererBuilder<Video> {
 }
 ```
 
-* 3. Initialize your ListView/RecyclerView with your RendererBuilder<T> and your AdapteeCollection inside Activities and Fragments. **You can use ListAdapteeCollection or create your own implementation creating a class which implements AdapteeCollection to configure your RendererAdapter/RVRendererAdapter.**
 
-```java
-private void initListView() {
-    listView.setAdapter(adapter);
-}
-```
+References
+----------
 
-or
+You can find implementation details in these talks:
 
-```java
-private void initListView() {
-    recyclerView.setAdapter(adapter);
-}
-```
+[Software Design Patterns on Android Video][4]
 
-The sample code is using [Dagger][6] and [ButterKnife][4] library to avoid initialize some entities and findViewById() methods, but you can use this library without third party libraries and provide that dependencies yourself.
-
-**Remember if you are going to use RecyclerView instead of ListView you'll have to use RVRendererAdapter instead of RendererAdapter.** 
-
-**If you was using Renderers v1.5 or a lower version and you want to use your Renderers with RecyclerView the only thing you only have to do is to replace your RendererAdapter extension with a RVRendererAdapter.**
-
-Usage
------
-
-Download the project, compile it using ```mvn clean install``` import ``renderers-2.0.1.aar`` into your project.
-
-Or declare it into your pom.xml
-
-```xml
-<dependency>
-    <groupId>com.github.pedrovgs</groupId>
-    <artifactId>renderers</artifactId>
-    <version>2.0.1</version>
-    <type>aar</type>
-</dependency>
-```
-
-
-Or into your build.gradle
-```groovy
-dependencies{
-    compile 'com.github.pedrovgs:renderers:2.0.1'
-}
-```
-
+[Software Design Patterns on Android Slides][5]
 
 Developed By
 ------------
@@ -227,33 +197,16 @@ Developed By
 * Pedro Vicente Gómez Sánchez - <pedrovicente.gomez@gmail.com>
 
 <a href="https://twitter.com/pedro_g_s">
-  <img alt="Follow me on Twitter" src="http://imageshack.us/a/img812/3923/smallth.png" />
+  <img alt="Follow me on Twitter" src="https://image.freepik.com/iconos-gratis/twitter-logo_318-40209.jpg" height="60" width="60"/>
 </a>
 <a href="https://es.linkedin.com/in/pedrovgs">
-  <img alt="Add me to Linkedin" src="http://imageshack.us/a/img41/7877/smallld.png" />
+  <img alt="Add me to Linkedin" src="https://image.freepik.com/iconos-gratis/boton-del-logotipo-linkedin_318-84979.png" height="60" width="60"/>
 </a>
-
-Who's using it
---------------
-
-* [El Rubius Vídeos][7]
-* [Tuenti][8]
-* [Finge Gesture Launcher][9]
-* [Cabify] [10]
-* [InfoJobs] [11]
-
-*Does your app use Renderers? If you want to be featured on this list drop me a line.*
-
-Contributors
-------------
-
-* [Pedro Vicente Gómez Sánchez][12]
-* [Rayco Araña][13]
 
 License
 -------
 
-    Copyright 2014 Pedro Vicente Gómez Sánchez
+    Copyright 2016 Pedro Vicente Gómez Sánchez
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -273,11 +226,3 @@ License
 [3]: https://github.com/JakeWharton/butterknife
 [4]: http://media.fib.upc.edu/fibtv/streamingmedia/view/2/930
 [5]: http://www.slideshare.net/PedroVicenteGmezSnch/software-design-patterns-on-android
-[6]: https://github.com/square/dagger
-[7]: https://play.google.com/store/apps/details?id=com.nero.elrubiusomg
-[8]: https://play.google.com/store/apps/details?hl=es&id=com.tuenti.messenger
-[9]: https://play.google.com/store/apps/details?id=com.carlosdelachica.finger
-[10]: https://play.google.com/store/apps/details?id=com.cabify.rider
-[11]: https://play.google.com/store/apps/details?id=net.infojobs.mobile.android
-[12]: https://github.com/pedrovgs
-[13]: https://github.com/raycoarana

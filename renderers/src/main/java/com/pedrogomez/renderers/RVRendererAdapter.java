@@ -15,20 +15,24 @@
  */
 package com.pedrogomez.renderers;
 
+import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+
 import com.pedrogomez.renderers.exception.NullRendererBuiltException;
+
 import java.util.Collection;
+import java.util.List;
 
 /**
  * RecyclerView.Adapter extension created to work RendererBuilders and Renderer instances. Other
  * adapters have to use this one to show information into RecyclerView widgets.
- * <p/>
+ * <p>
  * This class is the heart of this library. It's used to avoid the library users declare a new
  * renderer each time they have to show information into a RecyclerView.
- * <p/>
- * RVRendererAdapter<T> has to be constructed with a LayoutInflater to inflate views, one
+ * <p>
+ * RVRendererAdapter has to be constructed with a LayoutInflater to inflate views, one
  * RendererBuilder to provide Renderer to RVRendererAdapter and one AdapteeCollection to
  * provide the elements to render.
  *
@@ -36,13 +40,14 @@ import java.util.Collection;
  */
 public class RVRendererAdapter<T> extends RecyclerView.Adapter<RendererViewHolder> {
 
-  private final LayoutInflater layoutInflater;
   private final RendererBuilder<T> rendererBuilder;
-  private final AdapteeCollection<T> collection;
+  private AdapteeCollection<T> collection;
 
-  public RVRendererAdapter(LayoutInflater layoutInflater, RendererBuilder<T> rendererBuilder,
-      AdapteeCollection<T> collection) {
-    this.layoutInflater = layoutInflater;
+  public RVRendererAdapter(RendererBuilder<T> rendererBuilder) {
+    this(rendererBuilder, new ListAdapteeCollection<T>());
+  }
+
+  public RVRendererAdapter(RendererBuilder<T> rendererBuilder, AdapteeCollection<T> collection) {
     this.rendererBuilder = rendererBuilder;
     this.collection = collection;
   }
@@ -57,6 +62,14 @@ public class RVRendererAdapter<T> extends RecyclerView.Adapter<RendererViewHolde
 
   @Override public long getItemId(int position) {
     return position;
+  }
+
+  public void setCollection(AdapteeCollection<T> collection) {
+    if (collection == null) {
+      throw new IllegalArgumentException("The AdapteeCollection configured can't be null");
+    }
+
+    this.collection = collection;
   }
 
   /**
@@ -81,7 +94,7 @@ public class RVRendererAdapter<T> extends RecyclerView.Adapter<RendererViewHolde
    */
   @Override public RendererViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
     rendererBuilder.withParent(viewGroup);
-    rendererBuilder.withLayoutInflater(layoutInflater);
+    rendererBuilder.withLayoutInflater(LayoutInflater.from(viewGroup.getContext()));
     rendererBuilder.withViewType(viewType);
     RendererViewHolder viewHolder = rendererBuilder.buildRendererViewHolder();
     if (viewHolder == null) {
@@ -109,39 +122,43 @@ public class RVRendererAdapter<T> extends RecyclerView.Adapter<RendererViewHolde
   }
 
   /**
-   * Add an element to the AdapteeCollection<T>.
+   * Add an element to the AdapteeCollection.
    *
    * @param element to add.
+   * @return if the element has been added.
    */
-  public void add(T element) {
-    collection.add(element);
+  public boolean add(T element) {
+    return collection.add(element);
   }
 
   /**
-   * Remove an element from the AdapteeCollection<T>.
+   * Remove an element from the AdapteeCollection.
    *
    * @param element to remove.
+   * @return if the element has been removed.
    */
-  public void remove(T element) {
-    collection.remove(element);
+  public boolean remove(Object element) {
+    return collection.remove(element);
   }
 
   /**
-   * Add a Collection<T> of elements to the AdapteeCollection.
+   * Add a Collection of elements to the AdapteeCollection.
    *
    * @param elements to add.
+   * @return if the elements have been added.
    */
-  public void addAll(Collection<T> elements) {
-    collection.addAll(elements);
+  public boolean addAll(Collection<? extends T> elements) {
+    return collection.addAll(elements);
   }
 
   /**
-   * Remove a Collection<T> of elements to the AdapteeCollection.
+   * Remove a Collection of elements to the AdapteeCollection.
    *
    * @param elements to remove.
+   * @return if the elements have been removed.
    */
-  public void removeAll(Collection<T> elements) {
-    collection.removeAll(elements);
+  public boolean removeAll(Collection<?> elements) {
+    return collection.removeAll(elements);
   }
 
   /**
@@ -152,7 +169,7 @@ public class RVRendererAdapter<T> extends RecyclerView.Adapter<RendererViewHolde
   }
 
   /**
-   * Allows the client code to access the AdapteeCollection<T> from subtypes of RendererAdapter.
+   * Allows the client code to access the AdapteeCollection from subtypes of RendererAdapter.
    *
    * @return collection used in the adapter as the adaptee class.
    */
@@ -163,7 +180,7 @@ public class RVRendererAdapter<T> extends RecyclerView.Adapter<RendererViewHolde
   /**
    * Empty implementation created to allow the client code to extend this class without override
    * getView method.
-   * <p/>
+   * <p>
    * This method is called before render the Renderer and can be used in RendererAdapter extension
    * to add extra info to the renderer created like the position in the ListView/RecyclerView.
    *
@@ -173,5 +190,24 @@ public class RVRendererAdapter<T> extends RecyclerView.Adapter<RendererViewHolde
    */
   protected void updateRendererExtraValues(T content, Renderer<T> renderer, int position) {
 
+  }
+
+  /**
+   * Provides a ready to use diff update for our adapter based on the implementation of the
+   * standard equals method from Object.
+   *
+   * @param newList to refresh our content
+   */
+  public void diffUpdate(List<T> newList) {
+    if (getCollection().size() == 0) {
+      addAll(newList);
+      notifyDataSetChanged();
+    } else {
+      DiffCallback diffCallback = new DiffCallback(collection, newList);
+      DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffCallback);
+      clear();
+      addAll(newList);
+      diffResult.dispatchUpdatesTo(this);
+    }
   }
 }

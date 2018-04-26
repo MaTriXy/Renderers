@@ -67,4 +67,27 @@ public class Video {
   public void setLive(boolean live) {
     this.live = live;
   }
+
+  @Override public boolean equals(Object obj) {
+    if (obj instanceof Video) {
+      Video other = (Video) obj;
+      return title.equals(other.title)
+              && thumbnail.equals(other.thumbnail)
+              && favorite == other.favorite
+              && liked == other.liked
+              && live == other.live;
+    } else {
+      return false;
+    }
+  }
+
+  /*
+   * In this example we use the thumbnail property as hashCode because we assume every thumbnail is
+   * going to be different for every video. It can be used as an identifier. This is needed to
+   * support differential updates properly. You can use your item ID if you have one.
+   */
+  @Override
+  public int hashCode() {
+    return thumbnail.hashCode();
+  }
 }

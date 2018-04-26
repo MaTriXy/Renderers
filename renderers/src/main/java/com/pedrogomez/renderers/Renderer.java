@@ -15,6 +15,7 @@
  */
 package com.pedrogomez.renderers;
 
+import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,11 +26,11 @@ import com.pedrogomez.renderers.exception.NotInflateViewException;
  * Core class in this library. Base class created to work as a root ViewHolder in the classic
  * ListView / Adapter implementation. This entity will be extended by other Renderer classes in
  * order to show items into the screen.
- * <p/>
+ *
  * A Renderer have to encapsulate the presentation logic for ech row of your ListView/RecyclerView.
- * <p/>
+ *
  * Every Renderer have inside the view is rendering and the content is using to get the info.
- * <p/>
+ *
  * If you used to use RecyclerView extensions of this class are going to replace ViewHolder
  * implementations.
  *
@@ -82,6 +83,16 @@ public abstract class Renderer<T> implements Cloneable {
   }
 
   /**
+   * Method to access to the current Renderer Context.
+   *
+   * @return the context associated to the root view or null if the root view has not been
+   * initialized.
+   */
+  protected Context getContext() {
+    return getRootView() != null ? getRootView().getContext() : null;
+  }
+
+  /**
    * @return the content stored in the Renderer.
    */
   protected final T getContent() {
@@ -90,6 +101,8 @@ public abstract class Renderer<T> implements Cloneable {
 
   /**
    * Configures the content stored in the Renderer.
+   *
+   * @param content associated to the Renderer instance.
    */
   protected void setContent(T content) {
     this.content = content;
@@ -97,11 +110,15 @@ public abstract class Renderer<T> implements Cloneable {
 
   /**
    * Map all the widgets from the rootView to Renderer members.
+   *
+   * @param rootView inflated using previously.
    */
   protected abstract void setUpView(View rootView);
 
   /**
    * Set all the listeners to members mapped in setUpView method.
+   *
+   * @param rootView inflated using previously.
    */
   protected abstract void hookListeners(View rootView);
 
@@ -110,6 +127,7 @@ public abstract class Renderer<T> implements Cloneable {
    * NotInflateViewException will be thrown.
    *
    * @param inflater LayoutInflater service to inflate.
+   * @param parent view group associated to the current Renderer instance.
    * @return View with the inflated layout.
    */
   protected abstract View inflate(LayoutInflater inflater, ViewGroup parent);

@@ -15,13 +15,12 @@
  */
 package com.pedrogomez.renderers.sample.ui.renderers;
 
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
 import com.pedrogomez.renderers.sample.R;
 import com.pedrogomez.renderers.sample.model.Video;
 import java.util.Date;
@@ -35,22 +34,18 @@ import java.util.Date;
  */
 public class LiveVideoRenderer extends VideoRenderer {
 
-  @InjectView(R.id.date) TextView date;
-
-  public LiveVideoRenderer(Context context) {
-    super(context);
-  }
+  @Bind(R.id.date) TextView date;
 
   @Override protected View inflate(LayoutInflater inflater, ViewGroup parent) {
     View inflatedView = inflater.inflate(R.layout.live_video_renderer, parent, false);
-    ButterKnife.inject(this, inflatedView);
+    ButterKnife.bind(this, inflatedView);
     return inflatedView;
   }
 
   @Override protected void setUpView(View rootView) {
-         /*
-          * Empty implementation substituted with the usage of ButterKnife library by Jake Wharton.
-          */
+    /*
+      * Empty implementation substituted with the usage of ButterKnife library by Jake Wharton.
+     */
   }
 
   @Override protected void renderLabel() {

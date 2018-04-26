@@ -15,22 +15,36 @@
  */
 package com.pedrogomez.renderers;
 
-import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 /**
- * RecyclerView.ViewHolder extension created to be able to use Renderer classes in RecyclerView
- * widgets. This class will be completely hidden to the library clients.
+ * Renderer created only for testing purposes.
+ *
+ * @author Rostyslav Roshak.
  */
-public class RendererViewHolder extends RecyclerView.ViewHolder {
+public class StringRenderer extends Renderer<String> {
 
-  private final Renderer renderer;
+  private View view;
 
-  public RendererViewHolder(Renderer renderer) {
-    super(renderer.getRootView());
-    this.renderer = renderer;
+  @Override protected void setUpView(View rootView) {
+
   }
 
-  public Renderer getRenderer() {
-    return renderer;
+  @Override protected void hookListeners(View rootView) {
+
+  }
+
+  @Override protected View inflate(LayoutInflater inflater, ViewGroup parent) {
+    return view;
+  }
+
+  @Override public void render() {
+
+  }
+
+  public void setView(View view) {
+    this.view = view;
   }
 }

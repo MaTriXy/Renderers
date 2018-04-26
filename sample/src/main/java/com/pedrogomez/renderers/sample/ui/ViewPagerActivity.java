@@ -16,50 +16,52 @@
 package com.pedrogomez.renderers.sample.ui;
 
 import android.os.Bundle;
-import android.widget.ListView;
-import butterknife.Bind;
+import android.support.v4.view.ViewPager;
+
 import com.pedrogomez.renderers.AdapteeCollection;
-import com.pedrogomez.renderers.RendererAdapter;
+import com.pedrogomez.renderers.VPRendererAdapter;
 import com.pedrogomez.renderers.sample.R;
 import com.pedrogomez.renderers.sample.model.RandomVideoCollectionGenerator;
 import com.pedrogomez.renderers.sample.model.Video;
 import com.pedrogomez.renderers.sample.ui.builder.VideoRendererBuilder;
 
+import butterknife.Bind;
+
 /**
- * ListViewActivity for the Renderers demo.
+ * ViewPagerActivity for the Renderers demo.
  *
- * @author Pedro Vicente Gómez Sánchez.
+ * @author Jc Miñarro
  */
-public class ListViewActivity extends BaseActivity {
+public class ViewPagerActivity extends BaseActivity {
 
   private static final int VIDEO_COUNT = 100;
 
-  private RendererAdapter<Video> adapter;
+  private VPRendererAdapter<Video> adapter;
 
-  @Bind(R.id.lv_renderers) ListView listView;
+  @Bind(R.id.vp_renderers) ViewPager viewPager;
 
   @Override protected void onCreate(Bundle savedInstanceState) {
-    setContentView(R.layout.activity_list_view);
+    setContentView(R.layout.activity_view_pager);
     super.onCreate(savedInstanceState);
     initAdapter();
     initListView();
   }
 
   /**
-   * Initialize RendererAdapter
+   * Initialize VPRendererAdapter
    */
   private void initAdapter() {
     RandomVideoCollectionGenerator randomVideoCollectionGenerator =
         new RandomVideoCollectionGenerator();
     AdapteeCollection<Video> videoCollection =
         randomVideoCollectionGenerator.generateListAdapteeVideoCollection(VIDEO_COUNT);
-    adapter = new RendererAdapter<Video>(new VideoRendererBuilder(), videoCollection);
+    adapter = new VPRendererAdapter<Video>(new VideoRendererBuilder(), videoCollection);
   }
 
   /**
-   * Initialize ListVideo with our RendererAdapter.
+   * Initialize ViewPager with our VPRendererAdapter.
    */
   private void initListView() {
-    listView.setAdapter(adapter);
+    viewPager.setAdapter(adapter);
   }
 }

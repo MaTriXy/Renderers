@@ -1,0 +1,32 @@
+buildscript {
+  repositories {
+    mavenCentral()
+    jcenter()
+  }
+  dependencies {
+    classpath 'com.android.tools.build:gradle:2.3.1'
+    classpath 'com.github.pedrovgs:kuronometer:0.1.1'
+  }
+}
+
+allprojects {
+  repositories {
+    mavenCentral()
+  }
+
+  apply plugin: 'checkstyle'
+
+  task checkstyle(type: Checkstyle) {
+    configFile file("${project.rootDir}/config/checkstyle.xml")
+    source 'src'
+    include '**/*.java'
+    exclude '**/gen/**'
+
+    classpath = files()
+  }
+}
+
+task clean(type: Delete) {
+  delete rootProject.buildDir
+}
+

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ Copyright (C) 2014 Pedro Vicente Gomez Sanchez.
+  ~ Copyright (C) 2016 Pedro Vicente Gómez Sánchez.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -14,16 +14,11 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<resources>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.github.pedrovgs.renderers"
+    >
 
-  <string name="app_name">Renderers</string>
-  <string name="favorite_label">Favorite</string>
-  <string name="like_label">Like</string>
-  <string name="dislike_label">Dislike</string>
-  <string name="live_label">Live</string>
-  <string name="delete_label">Delete me</string>
-  <string name="open_lv_sample">Open ListView sample</string>
-  <string name="open_rv_sample">Open RecyclerView sample</string>
-  <string name="open_vp_sample">Open ViewPager sample</string>
+  <application>
+  </application>
 
-</resources>
+</manifest>

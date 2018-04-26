@@ -4,17 +4,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import com.pedrogomez.renderers.exception.NullRendererBuiltException;
-import java.util.Collection;
-import java.util.LinkedList;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.util.Collection;
+import java.util.LinkedList;
+
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.notNull;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -88,7 +91,7 @@ import static org.mockito.Mockito.when;
     verify(mockedRendererBuilder).withContent(ANY_OBJECT);
     verify(mockedRendererBuilder).withConvertView(mockedConvertView);
     verify(mockedRendererBuilder).withParent(mockedParent);
-    verify(mockedRendererBuilder).withLayoutInflater(mockedLayoutInflater);
+    verify(mockedRendererBuilder).withLayoutInflater((LayoutInflater) notNull());
   }
 
   @Test public void shouldBuildRendererAndCallUpdateRendererExtraValues() {
@@ -152,13 +155,35 @@ import static org.mockito.Mockito.when;
     verify(mockedCollection).clear();
   }
 
+  @Test public void shouldSetAdapteeCollection() throws Exception {
+    RendererAdapter<Object> adapter = new RendererAdapter<Object>(mockedRendererBuilder);
+
+    adapter.setCollection(mockedCollection);
+
+    assertEquals(mockedCollection, adapter.getCollection());
+  }
+
+  @Test public void shouldBeEmptyWhenItsCreatedWithJustARendererBuilder() {
+    RendererAdapter<Object> adapter = new RendererAdapter<Object>(mockedRendererBuilder);
+
+    assertEquals(0, adapter.getCount());
+  }
+
+
+  @Test(expected = IllegalArgumentException.class)
+  public void shouldThrowExceptionWhenSetNullCollection() {
+    RendererAdapter<Object> adapter = new RendererAdapter<Object>(mockedRendererBuilder);
+
+    adapter.setCollection(null);
+  }
+
   private void initializeMocks() {
     MockitoAnnotations.initMocks(this);
+    when(mockedParent.getContext()).thenReturn(Robolectric.application);
   }
 
   private void initializeRendererAdapter() {
-    rendererAdapter =
-        new RendererAdapter<Object>(mockedLayoutInflater, mockedRendererBuilder, mockedCollection);
+    rendererAdapter = new RendererAdapter<Object>(mockedRendererBuilder, mockedCollection);
     rendererAdapter = spy(rendererAdapter);
   }
 }
