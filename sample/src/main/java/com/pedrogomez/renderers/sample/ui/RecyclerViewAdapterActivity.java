@@ -16,10 +16,10 @@
 package com.pedrogomez.renderers.sample.ui;
 
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import butterknife.Bind;
-import com.pedrogomez.renderers.AdapteeCollection;
+
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.pedrogomez.renderers.RVRendererAdapter;
 import com.pedrogomez.renderers.RendererBuilder;
 import com.pedrogomez.renderers.sample.R;
@@ -28,18 +28,21 @@ import com.pedrogomez.renderers.sample.model.Video;
 import com.pedrogomez.renderers.sample.ui.renderers.RemovableVideoRenderer;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
+
+import butterknife.BindView;
 
 /**
- * RecyclerViewActivity for the Renderers demo.
+ * RecyclerViewAdapterActivity for the Renderers demo.
  *
  * @author Pedro Vicente Gómez Sánchez.
  */
-public class RecyclerViewActivity extends BaseActivity {
+public class RecyclerViewAdapterActivity extends BaseActivity {
 
   private static final int VIDEO_COUNT = 100;
 
-  @Bind(R.id.rv_renderers) RecyclerView recyclerView;
+  @BindView(R.id.rv_renderers)
+  RecyclerView recyclerView;
 
   private RVRendererAdapter<Video> adapter;
 
@@ -56,13 +59,11 @@ public class RecyclerViewActivity extends BaseActivity {
   private void initAdapter() {
     RandomVideoCollectionGenerator randomVideoCollectionGenerator =
         new RandomVideoCollectionGenerator();
-    final AdapteeCollection<Video> videoCollection =
-        randomVideoCollectionGenerator.generateListAdapteeVideoCollection(VIDEO_COUNT);
+    final List<Video> videoCollection = randomVideoCollectionGenerator.generate(VIDEO_COUNT);
     RendererBuilder<Video> rendererBuilder = new RendererBuilder<Video>().withPrototype(
         new RemovableVideoRenderer(new RemovableVideoRenderer.Listener() {
           @Override public void onRemoveButtonTapped(Video video) {
-            ArrayList<Video> clonedList =
-                new ArrayList<>((Collection<? extends Video>) videoCollection);
+            ArrayList<Video> clonedList = new ArrayList<>(videoCollection);
             clonedList.remove(video);
             adapter.diffUpdate(clonedList);
           }

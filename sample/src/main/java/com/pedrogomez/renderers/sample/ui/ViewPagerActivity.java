@@ -16,16 +16,18 @@
 package com.pedrogomez.renderers.sample.ui;
 
 import android.os.Bundle;
-import android.support.v4.view.ViewPager;
 
-import com.pedrogomez.renderers.AdapteeCollection;
+import androidx.viewpager.widget.ViewPager;
+
 import com.pedrogomez.renderers.VPRendererAdapter;
 import com.pedrogomez.renderers.sample.R;
 import com.pedrogomez.renderers.sample.model.RandomVideoCollectionGenerator;
 import com.pedrogomez.renderers.sample.model.Video;
 import com.pedrogomez.renderers.sample.ui.builder.VideoRendererBuilder;
 
-import butterknife.Bind;
+import java.util.List;
+
+import butterknife.BindView;
 
 /**
  * ViewPagerActivity for the Renderers demo.
@@ -38,7 +40,8 @@ public class ViewPagerActivity extends BaseActivity {
 
   private VPRendererAdapter<Video> adapter;
 
-  @Bind(R.id.vp_renderers) ViewPager viewPager;
+  @BindView(R.id.vp_renderers)
+  ViewPager viewPager;
 
   @Override protected void onCreate(Bundle savedInstanceState) {
     setContentView(R.layout.activity_view_pager);
@@ -53,9 +56,8 @@ public class ViewPagerActivity extends BaseActivity {
   private void initAdapter() {
     RandomVideoCollectionGenerator randomVideoCollectionGenerator =
         new RandomVideoCollectionGenerator();
-    AdapteeCollection<Video> videoCollection =
-        randomVideoCollectionGenerator.generateListAdapteeVideoCollection(VIDEO_COUNT);
-    adapter = new VPRendererAdapter<Video>(new VideoRendererBuilder(), videoCollection);
+    List<Video> videoCollection = randomVideoCollectionGenerator.generate(VIDEO_COUNT);
+    adapter = new VPRendererAdapter<>(new VideoRendererBuilder(), videoCollection);
   }
 
   /**
